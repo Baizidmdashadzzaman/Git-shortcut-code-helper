@@ -1,0 +1,29 @@
+////////////////////
+DB::transaction(function () use($properties, $permissions) {
+    $role = Role::create($properties);
+    $role->permissions()->attach($permissions);
+});
+////////////////////
+DB::beginTransaction();
+DB::connection('mysql2')->beginTransaction();
+try {
+
+  //creating company  
+  $companyResult = $this->CreateCompanyService->add($input);
+  //creating  company user
+  $userResult = $this->CreateCompnayUserService->add($input);
+  //store  company user details
+  $userDetailResult = $this->CreateUserDetialService->add($companyResult, $userResult);
+  //creating company   resources
+  $resources = $this->CreateCompanyResources->add($companyResult, $input);
+
+  DB::commit();
+  DB::connection('mysql2')->commit();
+ 
+} catch (\Exception $ex) {
+  DB::rollBack();
+  DB::connection('mysql2')->rollBack();
+  return $this->returnResponse(500, false, $ex->getMessage());
+  // something went wrong
+}
+
